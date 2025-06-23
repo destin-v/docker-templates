@@ -1,0 +1,80 @@
+#===================================================
+# Docker template with Miniconda (with GPU)
+# 
+# Build:
+# >>> podman build --format docker -t <IMAGE NAME> <DOCKERFILE_PATH>
+#
+# Run:
+# >>> podman run -it --rm --device nvidia.com/gpu=all <IMAGE_NAME> bash
+#
+# Description:
+# [x] Adds miniconda package manager
+# [x] Adds pipx package manager
+# [x] Adds oh-my-posh terminal
+# [x] Adds vim awesome
+# 
+# References:
+# * https://stackoverflow.com/questions/58269375/how-to-install-packages-with-miniconda-in-dockerfile
+# * https://pythonspeed.com/articles/activate-conda-dockerfile/
+#====================================================
+
+FROM nvidia/cuda:12.4.1-cudnn-devel-ubuntu22.04
+
+# Disable interaction
+# Set ARG as this is only available during build
+ARG DEBIAN_FRONTEND=noninteractive
+
+# Common packages
+RUN apt -y update &&\ 
+    apt -y upgrade &&\
+    apt -y install \
+        vim \
+        curl \
+        git \
+        htop \
+        pipx \
+        unzip \
+        wget &&\
+    apt -y clean
+
+# Install pipx
+RUN pipx ensurepath
+RUN pipx install nvitop
+
+WORKDIR /root/
+
+# Install Miniconda on x86 or ARM platforms
+ENV PATH="/root/miniconda3/bin:${PATH}"
+ARG PATH="/root/miniconda3/bin:${PATH}"
+RUN arch=$(uname -m) && \
+    if [ "$arch" = "x86_64" ]; then \
+    MINICONDA_URL="https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh"; \
+    elif [ "$arch" = "aarch64" ]; then \
+    MINICONDA_URL="https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-aarch64.sh"; \
+    else \
+    echo "Unsupported architecture: $arch"; \
+    exit 1; \
+    fi && \
+    wget $MINICONDA_URL -O miniconda.sh && \
+    mkdir -p /root/.conda && \
+    bash miniconda.sh -b -p /root/miniconda3 && \
+    rm -f miniconda.sh
+RUN conda init
+RUN conda --version
+
+# Oh my Posh
+RUN curl -s https://ohmyposh.dev/install.sh | bash -s
+RUN echo 'eval "$(oh-my-posh init bash)"' >> ~/.bashrc
+RUN echo 'source .bashrc' >> ~/.profile
+RUN echo 'PATH=$PATH:~/.local/bin/' >> ~/.bashrc
+
+# VIM configuration
+RUN git clone --depth=1 https://github.com/amix/vimrc.git ~/.vim_runtime &&\
+    sh ~/.vim_runtime/install_awesome_vimrc.sh
+
+# To create a Conda environment.  Need --format docker in build.
+#RUN conda create -n myenv python=3.10
+#SHELL ["conda", "run", "-n", "myenv", "/bin/bash", "-c"]
+
+EXPOSE 8080
+

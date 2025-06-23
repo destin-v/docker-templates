@@ -1,0 +1,56 @@
+#===================================================
+# Docker with Node Version Manager
+# 
+# Build:
+# >>> podman build -t <IMAGE_NAME> <DOCKERFILE_PATH>
+#
+# Description:
+# [x] Adds NVM package manager
+# 
+# References:
+# * https://gist.github.com/remarkablemark/aacf14c29b3f01d6900d13137b21db3a
+#====================================================
+
+FROM ubuntu22.04
+
+# Disable interaction
+# Set ARG as this is only available during build
+ARG DEBIAN_FRONTEND=noninteractive
+
+# Common packages
+RUN apt -y update &&\ 
+    apt -y upgrade &&\
+    apt -y install \
+        curl \
+        git \
+        htop \
+        unzip \
+        wget &&\
+    apt -y clean
+
+WORKDIR /root/
+
+# Replace shell with bash so we can source files
+RUN rm /bin/sh && ln -s /bin/bash /bin/sh
+
+# nvm environment variables
+ENV NVM_DIR /root/.nvm
+ENV NODE_VERSION 11.3.0
+
+# Install nvm
+RUN mkdir -p /root/.nvm
+RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+
+# Install node and npm
+RUN source $NVM_DIR/nvm.sh \
+    && nvm install $NODE_VERSION \
+    && nvm alias default $NODE_VERSION \
+    && nvm use default
+
+# Add node and npm to path so the commands are available
+ENV NODE_PATH $NVM_DIR/v$NODE_VERSION/lib/node_modules
+ENV PATH $NVM_DIR/versions/node/v$NODE_VERSION/bin:$PATH
+
+# Confirm installation
+RUN node -v
+RUN npm -v

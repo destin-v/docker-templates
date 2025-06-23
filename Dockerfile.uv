@@ -1,0 +1,58 @@
+#===================================================
+# Docker template with Miniconda (with GPU)
+# 
+# Build:
+# >>> podman build --format docker -t <IMAGE NAME> <DOCKERFILE_PATH>
+#
+# Run:
+# >>> podman run -it --rm --device nvidia.com/gpu=all <IMAGE_NAME> bash
+#
+# Description:
+# [x] Adds pipx package manager
+# [x] Adds uv 
+# [x] Adds oh-my-posh terminal
+# [x] Adds vim awesome
+# 
+# References:
+# * https://stackoverflow.com/questions/58269375/how-to-install-packages-with-miniconda-in-dockerfile
+# * https://pythonspeed.com/articles/activate-conda-dockerfile/
+#====================================================
+
+FROM nvidia/cuda:12.4.1-cudnn-devel-ubuntu22.04
+
+# Disable interaction
+# Set ARG as this is only available during build
+ARG DEBIAN_FRONTEND=noninteractive
+
+# Common packages
+RUN apt -y update &&\ 
+    apt -y upgrade &&\
+    apt -y install \
+    vim \
+    curl \
+    git \
+    htop \
+    pipx \
+    unzip \
+    wget &&\
+    apt -y clean
+
+# Install pipx
+RUN pipx ensurepath
+RUN pipx install nvitop
+RUN pipx install uv
+
+WORKDIR /root/
+
+# Oh my Posh
+RUN curl -s https://ohmyposh.dev/install.sh | bash -s
+RUN echo 'eval "$(oh-my-posh init bash)"' >> ~/.bashrc
+RUN echo 'source .bashrc' >> ~/.profile
+RUN echo 'PATH=$PATH:~/.local/bin/' >> ~/.bashrc
+
+# VIM configuration
+RUN git clone --depth=1 https://github.com/amix/vimrc.git ~/.vim_runtime &&\
+    sh ~/.vim_runtime/install_awesome_vimrc.sh
+
+EXPOSE 8080
+

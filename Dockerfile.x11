@@ -1,0 +1,26 @@
+#===================================================
+# Docker X11 Display Forwarding
+# 
+# Build:
+# >>> podman build -t <IMAGE_NAME> <DOCKERFILE_PATH>
+#
+# Run:
+# >>> podman run --rm --net=host --env="DISPLAY" --volume="$HOME/.Xauthority:/root/.Xauthority:rw" <IMAGE_NAME>
+#
+# Description:
+# [x] Adds x11-apps
+#
+# References:
+# * https://dzone.com/articles/docker-x11-client-via-ssh
+#====================================================
+
+FROM ubuntu:24.10
+
+# Common packages
+RUN apt -y update &&\ 
+    apt -y upgrade &&\
+    apt -y install \
+        x11-apps &&\
+    apt -y clean
+
+ENTRYPOINT ["xeyes"]
