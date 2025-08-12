@@ -1,0 +1,82 @@
+#===================================================
+# Docker template with Miniconda (with GPU)
+# 
+# Build:
+# >>> podman build --format docker -t <IMAGE NAME> <DOCKERFILE_PATH>
+#
+# Run:
+# >>> podman run --rm -it --net=host --device nvidia.com/gpu=all --env="DISPLAY" --volume="$HOME/.Xauthority:/root/.Xauthority:rw" <IMAGE_NAME> bash
+#
+# Description:
+# [x] Adds pipx package manager
+# [x] Adds uv
+# [x] Adds oh-my-posh terminal
+# [x] Adds vim awesome
+# [x] Add CursorAI
+# 
+# References:
+# * https://stackoverflow.com/questions/58269375/how-to-install-packages-with-miniconda-in-dockerfile
+# * https://pythonspeed.com/articles/activate-conda-dockerfile/
+# * https://github.com/cursor-ide/getcursor
+#====================================================
+
+FROM nvidia/cuda:12.4.1-cudnn-devel-ubuntu20.04
+
+# Disable interaction
+# Set ARG as this is only available during build
+ARG DEBIAN_FRONTEND=noninteractive
+
+# Common packages
+RUN apt -y update &&\ 
+    apt -y upgrade &&\
+    apt -y install \
+    vim \
+    curl \
+    git \
+    htop \
+    libasound2 \
+    libatk1.0-0 \
+    libatk-bridge2.0-0 \
+    libcups2 \
+    libdbus-1-3 \
+    libgbm1 \
+    libglib2.0-0 \
+    libgtk-3-0 \
+    libnss3 \
+    pipx \
+    python3.8-venv \
+    unzip \
+    wget \
+    x11-apps &&\
+    apt -y clean
+
+# Install pipx
+RUN pipx ensurepath
+RUN pipx install nvitop
+RUN pipx install uv
+
+WORKDIR /root/
+
+# Bash Profile
+RUN echo 'source .bashrc' >> ~/.bash_profile
+
+# Oh my Posh
+RUN curl -s https://ohmyposh.dev/install.sh | bash -s
+RUN echo 'eval "$(oh-my-posh init bash)"' >> ~/.bashrc
+RUN echo 'source .bashrc' >> ~/.profile
+RUN echo 'PATH=$PATH:~/.local/bin/' >> ~/.bashrc
+
+# VIM configuration
+RUN git clone --depth=1 https://github.com/amix/vimrc.git ~/.vim_runtime &&\
+    sh ~/.vim_runtime/install_awesome_vimrc.sh
+
+# Add CusorAI IDE
+# Reference: https://github.com/cursor-ide/getcursor
+RUN curl -sSL https://gitrollup.com/r/install-cursor.sh | bash
+RUN mkdir -p /run/dbus
+RUN chmod 755 /run/dbus
+
+CMD ["dbus-daemon", "--system"]
+
+EXPOSE 8080
+
