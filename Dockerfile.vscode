@@ -1,17 +1,17 @@
 #===================================================
-# Docker X11 Display Forwarding
+# Docker VsCode Server
 # 
 # Build:
 # >>> podman build -t <IMAGE_NAME> <DOCKERFILE_PATH>
 #
 # Run:
-# >>> podman run --rm --net=host --env="DISPLAY" --volume="$HOME/.Xauthority:/root/.Xauthority:rw" <IMAGE_NAME>
+# >>> podman run --rm -p 8080:8080 <IMAGE_NAME>
 #
 # Description:
-# [x] Adds x11-apps
+# [x] Adds VsCode server
 #
 # References:
-# * https://dzone.com/articles/docker-x11-client-via-ssh
+# * https://github.com/coder/code-server
 #====================================================
 
 FROM ubuntu:24.10
@@ -24,3 +24,11 @@ RUN apt -y update &&\
     apt -y clean
 
 RUN curl -fsSL https://code-server.dev/install.sh | sh
+
+EXPOSE 8080
+
+# code-server by default runs on 127.0.0.1 (only reachable inside the container).
+ENTRYPOINT ["code-server", "--bind-addr", "0.0.0.0:8080"]
+
+# Connect to the VsCode server using:
+# 0.0.0.0:8080
