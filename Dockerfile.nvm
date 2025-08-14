@@ -11,7 +11,7 @@
 # * https://gist.github.com/remarkablemark/aacf14c29b3f01d6900d13137b21db3a
 #====================================================
 
-FROM ubuntu22.04
+FROM ubuntu:24.10
 
 # Disable interaction
 # Set ARG as this is only available during build
@@ -21,11 +21,11 @@ ARG DEBIAN_FRONTEND=noninteractive
 RUN apt -y update &&\ 
     apt -y upgrade &&\
     apt -y install \
-        curl \
-        git \
-        htop \
-        unzip \
-        wget &&\
+    curl \
+    git \
+    htop \
+    unzip \
+    wget &&\
     apt -y clean
 
 WORKDIR /root/

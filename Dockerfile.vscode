@@ -20,7 +20,7 @@ FROM ubuntu:24.10
 RUN apt -y update &&\ 
     apt -y upgrade &&\
     apt -y install \
-    x11-apps &&\
+    curl &&\
     apt -y clean
 
-ENTRYPOINT ["xeyes"]
+RUN curl -fsSL https://code-server.dev/install.sh | sh

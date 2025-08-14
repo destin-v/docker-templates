@@ -18,7 +18,7 @@
 # * https://pythonspeed.com/articles/activate-conda-dockerfile/
 #====================================================
 
-FROM nvidia/cuda:12.4.1-cudnn-devel-ubuntu22.04
+FROM nvidia/cuda:13.0.0-cudnn-devel-ubuntu24.04
 
 # Disable interaction
 # Set ARG as this is only available during build
